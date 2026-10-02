@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-create-admin-user
+      author: smartbiz
+      comment: "Единственный администратор системы. Логин admin, пароль admin123 (смените после первого входа)"
+      changes:
+        - insert:
+            tableName: app_user
+            columns:
+              - column: { name: username, value: admin }
+              # BCrypt-хеш пароля "admin123"
+              - column: { name: password_hash, value: "$2a$10$AUGFDrcMySdR0V0T9dgNm.9AFimSYbVSDQxOWEBsNiFKcLsc9O0xS" }
+              - column: { name: full_name, value: "Администратор" }
+              - column: { name: role, value: ADMIN }
+      rollback:
+        - delete:
+            tableName: app_user
+            where: username = 'admin'

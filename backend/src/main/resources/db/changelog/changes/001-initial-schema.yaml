@@ -1,0 +1,224 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-app-user
+      author: smartbiz
+      changes:
+        - createTable:
+            tableName: app_user
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: username, type: VARCHAR(64), constraints: { nullable: false, unique: true, uniqueConstraintName: uq_app_user_username } }
+              - column: { name: password_hash, type: VARCHAR(100), constraints: { nullable: false } }
+              - column: { name: full_name, type: VARCHAR(128) }
+              - column: { name: role, type: VARCHAR(32), defaultValue: ADMIN, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMP WITH TIME ZONE, defaultValueComputed: now(), constraints: { nullable: false } }
+
+  - changeSet:
+      id: 001-survey
+      author: smartbiz
+      changes:
+        - createTable:
+            tableName: survey
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: title, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: description, type: TEXT }
+              - column: { name: status, type: VARCHAR(16), defaultValue: DRAFT, constraints: { nullable: false } }
+              - column: { name: slug, type: VARCHAR(32), constraints: { nullable: false, unique: true, uniqueConstraintName: uq_survey_slug } }
+              - column: { name: accent_color, type: VARCHAR(16), defaultValue: "#7c3aed" }
+              - column: { name: welcome_message, type: TEXT }
+              - column: { name: thank_you_message, type: TEXT }
+              - column: { name: public_link_enabled, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: collect_contact, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: one_question_per_page, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMP WITH TIME ZONE, defaultValueComputed: now(), constraints: { nullable: false } }
+              - column: { name: updated_at, type: TIMESTAMP WITH TIME ZONE, defaultValueComputed: now(), constraints: { nullable: false } }
+              - column: { name: published_at, type: TIMESTAMP WITH TIME ZONE }
+              - column: { name: closed_at, type: TIMESTAMP WITH TIME ZONE }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - createIndex:
+            tableName: survey
+            indexName: idx_survey_status
+            columns:
+              - column: { name: status }
+
+  - changeSet:
+      id: 001-question
+      author: smartbiz
+      changes:
+        - createTable:
+            tableName: question
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column:
+                  name: survey_id
+                  type: BIGINT
+                  constraints: { nullable: false, foreignKeyName: fk_question_survey, references: survey(id), deleteCascade: true }
+              - column: { name: position, type: INT, constraints: { nullable: false } }
+              - column: { name: type, type: VARCHAR(32), constraints: { nullable: false } }
+              - column: { name: title, type: VARCHAR(1000), constraints: { nullable: false } }
+              - column: { name: description, type: TEXT }
+              - column: { name: required, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: allow_other, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: placeholder, type: VARCHAR(255) }
+              - column: { name: min_value, type: INT }
+              - column: { name: max_value, type: INT }
+              - column: { name: min_label, type: VARCHAR(128) }
+              - column: { name: max_label, type: VARCHAR(128) }
+              - column: { name: min_selections, type: INT }
+              - column: { name: max_selections, type: INT }
+        - createIndex:
+            tableName: question
+            indexName: idx_question_survey
+            columns:
+              - column: { name: survey_id }
+              - column: { name: position }
+
+  - changeSet:
+      id: 001-question-option
+      author: smartbiz
+      changes:
+        - createTable:
+            tableName: question_option
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column:
+                  name: question_id
+                  type: BIGINT
+                  constraints: { nullable: false, foreignKeyName: fk_option_question, references: question(id), deleteCascade: true }
+              - column: { name: position, type: INT, constraints: { nullable: false } }
+              - column: { name: label, type: VARCHAR(500), constraints: { nullable: false } }
+        - createIndex:
+            tableName: question_option
+            indexName: idx_option_question
+            columns:
+              - column: { name: question_id }
+
+  - changeSet:
+      id: 001-lead
+      author: smartbiz
+      changes:
+        - createTable:
+            tableName: lead
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: full_name, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: email, type: VARCHAR(255) }
+              - column: { name: phone, type: VARCHAR(64) }
+              - column: { name: company, type: VARCHAR(255) }
+              - column: { name: note, type: TEXT }
+              - column: { name: source, type: VARCHAR(32), defaultValue: MANUAL, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMP WITH TIME ZONE, defaultValueComputed: now(), constraints: { nullable: false } }
+        - sql:
+            sql: CREATE INDEX idx_lead_email_lower ON lead (lower(email))
+
+  - changeSet:
+      id: 001-invitation
+      author: smartbiz
+      changes:
+        - createTable:
+            tableName: invitation
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column:
+                  name: survey_id
+                  type: BIGINT
+                  constraints: { nullable: false, foreignKeyName: fk_invitation_survey, references: survey(id), deleteCascade: true }
+              - column:
+                  name: lead_id
+                  type: BIGINT
+                  constraints: { nullable: false, foreignKeyName: fk_invitation_lead, references: lead(id), deleteCascade: true }
+              - column: { name: token, type: VARCHAR(64), constraints: { nullable: false, unique: true, uniqueConstraintName: uq_invitation_token } }
+              - column: { name: created_at, type: TIMESTAMP WITH TIME ZONE, defaultValueComputed: now(), constraints: { nullable: false } }
+              - column: { name: opened_at, type: TIMESTAMP WITH TIME ZONE }
+              - column: { name: completed_at, type: TIMESTAMP WITH TIME ZONE }
+        - addUniqueConstraint:
+            tableName: invitation
+            columnNames: survey_id, lead_id
+            constraintName: uq_invitation_survey_lead
+
+  - changeSet:
+      id: 001-survey-response
+      author: smartbiz
+      changes:
+        - createTable:
+            tableName: survey_response
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column:
+                  name: survey_id
+                  type: BIGINT
+                  constraints: { nullable: false, foreignKeyName: fk_response_survey, references: survey(id), deleteCascade: true }
+              - column:
+                  name: lead_id
+                  type: BIGINT
+                  constraints: { foreignKeyName: fk_response_lead, references: lead(id), deleteCascade: true }
+              - column:
+                  name: invitation_id
+                  type: BIGINT
+                  constraints: { foreignKeyName: fk_response_invitation, references: invitation(id), deleteCascade: true }
+              - column: { name: started_at, type: TIMESTAMP WITH TIME ZONE }
+              - column: { name: submitted_at, type: TIMESTAMP WITH TIME ZONE, defaultValueComputed: now(), constraints: { nullable: false } }
+              - column: { name: duration_seconds, type: INT }
+              - column: { name: user_agent, type: VARCHAR(512) }
+        - createIndex:
+            tableName: survey_response
+            indexName: idx_response_survey
+            columns:
+              - column: { name: survey_id }
+              - column: { name: submitted_at }
+        - createIndex:
+            tableName: survey_response
+            indexName: idx_response_lead
+            columns:
+              - column: { name: lead_id }
+
+  - changeSet:
+      id: 001-answer
+      author: smartbiz
+      changes:
+        - createTable:
+            tableName: answer
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column:
+                  name: response_id
+                  type: BIGINT
+                  constraints: { nullable: false, foreignKeyName: fk_answer_response, references: survey_response(id), deleteCascade: true }
+              - column:
+                  name: question_id
+                  type: BIGINT
+                  constraints: { nullable: false, foreignKeyName: fk_answer_question, references: question(id), deleteCascade: true }
+              - column: { name: text_value, type: TEXT }
+              - column: { name: number_value, type: "NUMERIC(19,4)" }
+              - column: { name: other_text, type: TEXT }
+        - createIndex:
+            tableName: answer
+            indexName: idx_answer_response
+            columns:
+              - column: { name: response_id }
+        - createIndex:
+            tableName: answer
+            indexName: idx_answer_question
+            columns:
+              - column: { name: question_id }
+        - createTable:
+            tableName: answer_option
+            columns:
+              - column:
+                  name: answer_id
+                  type: BIGINT
+                  constraints: { nullable: false, foreignKeyName: fk_answer_option_answer, references: answer(id), deleteCascade: true }
+              - column:
+                  name: option_id
+                  type: BIGINT
+                  constraints: { nullable: false, foreignKeyName: fk_answer_option_option, references: question_option(id), deleteCascade: true }
+        - addPrimaryKey:
+            tableName: answer_option
+            columnNames: answer_id, option_id
+            constraintName: pk_answer_option
+        - createIndex:
+            tableName: answer_option
+            indexName: idx_answer_option_option
+            columns:
+              - column: { name: option_id }

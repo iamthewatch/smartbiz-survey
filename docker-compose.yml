@@ -1,0 +1,33 @@
+name: smartbiz-survey
+
+# Приложение (backend + frontend). База данных внешняя — на сервере она уже есть.
+# Для локальной разработки база поднимается отдельно: docker compose -f docker-compose.db.yml up -d
+
+services:
+  backend:
+    build: ./backend
+    container_name: smartbiz-survey-backend
+    restart: unless-stopped
+    environment:
+      DB_URL: ${DB_URL:-jdbc:postgresql://postgres:5432/survey}
+      DB_USERNAME: ${DB_USERNAME:-smartbiz_user}
+      DB_PASSWORD: ${DB_PASSWORD:-change_me_strong_password}
+      # секрет подписи JWT (сгенерирован случайно); переменная JWT_SECRET в .env имеет приоритет
+      JWT_SECRET: ${JWT_SECRET:-m6H_aYe24m9EhFkyHTnHCgWBdot_tGQ21RN2YQm0Ab9wxy8hXtqZka7N6YhP-NYa}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8095}
+    # чтобы из контейнера была доступна база на хосте (DB_URL=...host.docker.internal...)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # порт на хосте (внутри контейнера — 8080); сайт ходит в API через frontend, этот порт — для прямого доступа/Swagger
+    ports:
+      - "${BACKEND_PORT:-8096}:8080"
+
+  frontend:
+    build: ./frontend
+    container_name: smartbiz-survey-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    # точка входа сайта (внутри контейнера — 80); на сервере на этот порт проксирует внешний nginx
+    ports:
+      - "${FRONTEND_PORT:-8095}:80"

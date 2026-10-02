@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* SmartBiz Design Code v1: graphite / milk / soft gray / chrome + rust-акцент */
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+  body {
+    @apply bg-milk font-sans text-graphite antialiased;
+  }
+  ::selection {
+    @apply bg-rust-500/25 text-graphite;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(17, 17, 17, 0.2) transparent;
+  }
+}
+
+@layer components {
+  /* карточка: тонкая рамка 1px, радиус ~16px, минимум декора */
+  .glass {
+    @apply rounded-2xl border border-graphite/10 bg-paper shadow-card;
+  }
+  .glass-strong {
+    @apply rounded-2xl border border-graphite/10 bg-paper shadow-card;
+  }
+  /* «элегантный serif» для редких акцентов */
+  .text-gradient {
+    @apply font-serif font-semibold italic text-rust-500;
+  }
+  .field {
+    @apply w-full rounded-xl border border-graphite/15 bg-paper px-4 py-2.5 text-sm text-graphite placeholder:text-stone-400
+      outline-none transition focus:border-graphite/60 focus:ring-4 focus:ring-graphite/[0.06];
+  }
+  /* микронадписи CAPS */
+  .label {
+    @apply mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-stone-500;
+  }
+  .skeleton {
+    @apply relative overflow-hidden rounded-xl bg-graphite/[0.05];
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-paper/70 to-transparent;
+  }
+}
+
+/* убираем стрелки у number-инпутов */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+}

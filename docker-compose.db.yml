@@ -1,0 +1,29 @@
+name: smartbiz-survey-local
+
+# PostgreSQL только для локальной разработки (на сервере база своя).
+#   docker compose -f docker-compose.db.yml up -d
+# Backend по умолчанию подключается к localhost:5434 (см. application.yml).
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: smartbiz-survey-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: smartbiz_survey
+      POSTGRES_USER: survey
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-survey}
+    ports:
+      - "5434:5432"
+    volumes:
+      - survey_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U survey -d smartbiz_survey"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  survey_pg_data:
+    # тот же том, что раньше создавал общий docker-compose.yml, — локальные данные сохраняются
+    name: smartbiz-survey_survey_pg_data
