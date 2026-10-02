@@ -34,7 +34,8 @@ npm run dev
 её адрес и доступы передаются через переменные окружения (например, в файле `.env` рядом с compose-файлом):
 
 ```bash
-DB_URL=jdbc:postgresql://<хост-базы>:5432/smartbiz_survey
+DB_NETWORK=<docker-сеть контейнера PostgreSQL>   # docker inspect <контейнер-базы>
+DB_URL=jdbc:postgresql://<имя-контейнера-базы>:5432/smartbiz_survey
 DB_USERNAME=survey
 DB_PASSWORD=<пароль>
 JWT_SECRET=<длинный-случайный-секрет-от-32-символов>

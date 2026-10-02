@@ -12,12 +12,16 @@ services:
       DB_URL: ${DB_URL:-jdbc:postgresql://postgres:5432/survey}
       DB_USERNAME: ${DB_USERNAME:-smartbiz_user}
       DB_PASSWORD: ${DB_PASSWORD:-change_me_strong_password}
-      # секрет подписи JWT (сгенерирован случайно); переменная JWT_SECRET в .env имеет приоритет
-      JWT_SECRET: ${JWT_SECRET:-m6H_aYe24m9EhFkyHTnHCgWBdot_tGQ21RN2YQm0Ab9wxy8hXtqZka7N6YhP-NYa}
+      # секрет подписи JWT — только из .env (openssl rand -base64 48)
+      JWT_SECRET: ${JWT_SECRET:?Укажите JWT_SECRET в .env (минимум 32 символа)}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8095}
     # чтобы из контейнера была доступна база на хосте (DB_URL=...host.docker.internal...)
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    # default — связь с frontend; db — сеть, в которой работает контейнер PostgreSQL
+    networks:
+      - default
+      - db
     # порт на хосте (внутри контейнера — 8080); сайт ходит в API через frontend, этот порт — для прямого доступа/Swagger
     ports:
       - "${BACKEND_PORT:-8096}:8080"
@@ -31,3 +35,10 @@ services:
     # точка входа сайта (внутри контейнера — 80); на сервере на этот порт проксирует внешний nginx
     ports:
       - "${FRONTEND_PORT:-8095}:80"
+
+networks:
+  # Внешняя сеть с базой. На сервере укажите в .env сеть контейнера PostgreSQL (DB_NETWORK=...),
+  # локально по умолчанию — сеть из docker-compose.db.yml
+  db:
+    external: true
+    name: ${DB_NETWORK:-smartbiz-survey-local_default}
